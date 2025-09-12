@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>¡Feliz Cumpleaños!</title>
+<style>
+  :root{
+    --bg1:#ff9a9e; --bg2:#fecfef; --accent:#ff4081;
+    --card-bg: #ffffffee;
+    --max-width:900px;
+  }
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    background: linear-gradient(135deg,var(--bg1),var(--bg2));
+    padding:20px;
+  }
+  .stage{
+    width:100%;max-width:var(--max-width);min-height:560px;
+    position:relative;border-radius:18px;background:var(--card-bg);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);overflow:hidden;
+  }
+
+  /* Top controls & CTA */
+  .topbar{
+    position:absolute;z-index:40;left:16px;right:16px;display:flex;padding:12px 0;justify-content: flex-end;
+  }
+  .btn{
+    background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:12px;font-weight:600;cursor:pointer;
+    box-shadow:0 6px 14px rgba(255,64,129,0.22);
+  }
+  .mute{background:transparent;color:var(--accent);border:2px solid var(--accent);}
+  .center{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;
+    padding:36px;
+  }
+
+  /* Envelope */
+  .envelope{
+    width:320px;max-width:80%;height:200px;position:relative;cursor:pointer;transition:transform .4s;
+  }
+  .env-body{
+    position:absolute;left:0;right:0;top:30px;bottom:0;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.12);
+    display:flex;align-items:center;justify-content:center;padding:16px;z-index:8;
+  }
+  .env-flap{
+    width:0;height:0;border-left:160px solid transparent;border-right:160px solid transparent;
+    border-bottom:80px solid #ff6f91;border-radius:6px;position:absolute;top:0;left:0;right:0;margin:auto;z-index:10;
+    transform-origin:50% 0%;transition:transform .6s;
+  }
+  .envelope.open .env-flap{ transform: rotateX(180deg) translateY(-20px);}
+
+  /* Message card revealed */
+  .message{
+    width:280px;max-width:78%;background:linear-gradient(180deg,#fff,#fff);padding:18px;border-radius:10px;text-align:center;
+    box-shadow:0 10px 22px rgba(0,0,0,0.08);transform:translateY(18px);z-index:9;
+  }
+  .message h1{margin:0;color:var(--accent);font-size:1.6rem;}
+  .message p{margin:10px 0 0 0;color:#333;}
+
+  /* Balloons */
+  .balloon{
+    position:absolute;bottom:-140px;width:68px;height:90px;border-radius:60% 60% 55% 55%;background:linear-gradient(180deg,#fff2,#fff0);display:flex;align-items:flex-end;justify-content:center;
+    transform-origin:center bottom;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,0.12);
+  }
+  .balloon:after{content:"";position:absolute;left:50%;bottom:-26px;width:2px;height:36px;background:#444;transform:translateX(-50%);border-radius:2px;opacity:0.7}
+  /* Position presets via JS */
+
+  /* Story text (top-left small) */
+  .story{
+    position:absolute;left:24px;top:24px;z-index:35;max-width:40%;
+    background:rgba(255,255,255,0.9);padding:10px 12px;border-radius:12px;backdrop-filter: blur(4px);
+  }
+  .story p{margin:0;font-weight:600;color:#222}
+
+  /* Cake */
+  .cake-wrap{position:absolute;left:50%;transform:translateX(-50%);bottom:80px;z-index:20;display:flex;flex-direction:column;align-items:center}
+  .cake{
+    width:220px;height:130px;background:linear-gradient(#ffd7c7,#ffb3a6);border-radius:18px;padding:12px;box-shadow:0 8px 20px rgba(0,0,0,0.12);
+    position:relative;display:flex;align-items:flex-start;justify-content:center;flex-direction:column;
+  }
+  .frost{width:200px;height:36px;background:linear-gradient(#fff,#fff5);border-radius:10px;margin:auto;position:relative;top:6px}
+  .candles{display:flex;gap:10px;justify-content:center;margin-top:6px}
+  .candle{width:8px;height:30px;background:#fff;border-radius:4px;position:relative;display:inline-block}
+  .candle .flame{position:absolute;top:-14px;left:50%;transform:translateX(-50%);width:12px;height:16px;border-radius:50%;background:linear-gradient(#ffec8b,#ff9f1c);box-shadow:0 8px 18px rgba(255,150,40,0.5)}
+  .candle.out .flame{display:none;opacity:0}
+
+  .blow-hint{margin-top:8px;font-size:0.9rem;color:#333;font-weight:600;text-align:center}
+
+  /* Canvas fireworks */
+  #fireworks{
+    position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width:600px){
+    .story{max-width:60%;left:12px;top:12px;padding:8px}
+    .message h1{font-size:1.3rem}
+    .cake{width:160px;height:110px}
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+
+    <canvas id="fireworks"></canvas>
+
+    <div class="topbar">
+      <div class="story" id="storyBox"><p id="storyText">Una sorpresa especial para ti 🎁</p></div>
+      <div>
+        <button class="btn" id="startBtn">🎵 Reproducir música / Empezar</button>
+        <button class="btn mute" id="muteBtn">🔊 Silenciar</button>
+      </div>
+    </div>
+
+    <div class="center">
+
+      <!-- Envelope (click to open) -->
+      <div class="envelope" id="envelope" title="Toca para abrir">
+        <div class="env-flap"></div>
+        <div class="env-body">
+          <div class="message" id="innerMessage">
+            <h1 id="title">¡Feliz Cumpleaños!</h1>
+            <p id="subtitle">Que este día esté lleno de alegría y sorpresas 🎉</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balloons container (added by JS) -->
+      <div id="balloonContainer"></div>
+
+    </div>
+
+    <!-- Cake with candles -->
+    <div class="cake-wrap" id="cakeWrap">
+      <div class="cake" id="cake">
+        <div class="frost"></div>
+        <div class="candles" id="candles">
+          <div class="candle" data-id="1"><div class="flame"></div></div>
+          <div class="candle" data-id="2"><div class="flame"></div></div>
+          <div class="candle" data-id="3"><div class="flame"></div></div>
+        </div>
+        <div class="blow-hint">Haz clic en las velas para soplarlas — o presiona espacio</div>
+      </div>
+    </div>
+
+    <!-- Audio (user must provide) -->
+    <audio id="bgAudio" loop preload="auto">
+      <source src="felizcumple.mp3" type="audio/mpeg">
+      Tu navegador no soporta audio.
+    </audio>
+
+  </div>
+
+<script>
+/* ========== Helpers & Globals ========== */
+const stage = document.getElementById('stage');
+const startBtn = document.getElementById('startBtn');
+const muteBtn = document.getElementById('muteBtn');
+const envelope = document.getElementById('envelope');
+const bgAudio = document.getElementById('bgAudio');
+const storyText = document.getElementById('storyText');
+const balloonContainer = document.getElementById('balloonContainer');
+const candles = document.getElementById('candles');
+
+let audioAllowed = false;
+let muted = false;
+
+/* ========== Start Button: first interaction to allow audio on iOS/Android ========== */
+function startExperience(){
+  if(audioAllowed) return;
+  audioAllowed = true;
+  bgAudio.play().catch(e=>{
+    // some browsers still block autoplay; user has to interact again
+  });
+  startBtn.style.display = 'none';
+  // Launch some animations
+  openEnvelope();
+  launchBalloons(9);
+  fadeStorySequence();
+  triggerFireworksOnce();
+}
+startBtn.addEventListener('click', startExperience);
+startBtn.addEventListener('touchstart', startExperience);
+
+/* Mute toggle */
+muteBtn.addEventListener('click', ()=>{
+  muted = !muted;
+  bgAudio.muted = muted;
+  muteBtn.textContent = muted ? '🔈 Silenciado' : '🔊 Silenciar';
+});
+
+/* ========== Envelope Open ========== */
+function openEnvelope(){
+  envelope.classList.add('open');
+  // Slight pop
+  envelope.style.transform = 'scale(1.02)';
+  setTimeout(()=> envelope.style.transform = '', 600);
+}
+
+/* Clicking envelope toggles reveal */
+envelope.addEventListener('click', ()=>{
+  envelope.classList.toggle('open');
+  if(!audioAllowed){ startExperience(); }
+});
+
+/* ========== Balloons ========== */
+function makeBalloon(xPercent, color, delay){
+  const b = document.createElement('div');
+  b.className = 'balloon';
+  b.style.left = xPercent + '%';
+  b.style.background = `radial-gradient(circle at 30% 20%, rgba(255,255,255,0.8), ${color})`;
+  b.style.animation = `floatUp ${8+Math.random()*6}s linear ${delay}s infinite`;
+  b.style.transform = `translateY(0)`;
+  b.style.opacity = 0.98;
+  // width random
+  const w = 48 + Math.round(Math.random()*48);
+  b.style.width = w + 'px';
+  b.style.height = Math.round(w*1.3) + 'px';
+  b.style.zIndex = 6;
+  balloonContainer.appendChild(b);
+  return b;
+}
+
+/* Add animation via JS keyframes (avoiding CSS file) */
+const styleSheet = document.createElement('style');
+styleSheet.innerHTML = `
+@keyframes floatUp {
+  0% { transform: translateY(40vh) rotate(0deg); opacity:0; }
+  10%{opacity:1}
+  100% { transform: translateY(-120vh) rotate(360deg); opacity:0.9; }
+}`;
+document.head.appendChild(styleSheet);
+
+function launchBalloons(n=7){
+  const colors = ['#ff8a80','#ffd180','#ea80fc','#8c9eff','#80d8ff','#a7ffeb','#b9f6ca'];
+  for(let i=0;i<n;i++){
+    const x = 8 + Math.random()*84;
+    const color = colors[i % colors.length];
+    makeBalloon(x, color, i*0.6*Math.random());
+  }
+}
+
+/* ========== Story sequence (top-left) ========== */
+const storyLines = [
+  "¡Esta tarjeta es para ti! 🎉",
+  "Que disfrutes tu día con mucha alegría 🥳",
+  "Abre el sobre, sopla las velas y... ¡a celebrar!",
+  "¡FELIZ CUMPLEAÑOS! 🎂"
+];
+function fadeStorySequence(){
+  let i=0;
+  storyText.textContent = storyLines[i];
+  const interval = setInterval(()=>{
+    i++;
+    if(i>=storyLines.length){ clearInterval(interval); return; }
+    storyText.style.opacity = 0;
+    setTimeout(()=>{
+      storyText.textContent = storyLines[i];
+      storyText.style.opacity = 1;
+    },300);
+  }, 2600);
+}
+
+/* ========== Cake & Candles (blow to turn off flames) ========== */
+function blowCandle(e){
+  const c = e.currentTarget;
+  c.classList.add('out');
+  // small sparkle fireworks
+  spawnFireworkAt(window.innerWidth/2, window.innerHeight - 150);
+}
+Array.from(document.querySelectorAll('.candle')).forEach(c=>{
+  c.addEventListener('click', blowCandle);
+});
+document.addEventListener('keydown', (ev)=>{
+  if(ev.code === 'Space'){
+    // turn off all
+    document.querySelectorAll('.candle').forEach(c=>c.classList.add('out'));
+    spawnFireworkAt(window.innerWidth/2, window.innerHeight - 150);
+  }
+});
+
+/* ========== Fireworks Canvas ========== */
+const canvas = document.getElementById('fireworks');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = stage.clientWidth;
+let H = canvas.height = stage.clientHeight;
+window.addEventListener('resize', ()=>{ W = canvas.width = stage.clientWidth; H = canvas.height = stage.clientHeight; });
+
+let particles = [];
+function Particle(x,y,color,vel,life,fade){
+  this.x=x;this.y=y;this.color=color;this.vx=vel.x;this.vy=vel.y;this.life=life;this.alpha=1;this.fade=fade;
+}
+Particle.prototype.update=function(dt){
+  this.x += this.vx * dt;
+  this.y += this.vy * dt + 0.02*dt*dt;
+  this.vy += 0.06*dt;
+  this.life -= dt;
+  this.alpha = Math.max(0, this.life/this.fade);
+}
+Particle.prototype.draw=function(ctx){
+  ctx.globalAlpha = this.alpha;
+  ctx.fillStyle = this.color;
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, 2.2, 0, Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function spawnFireworkAt(x,y){
+  const colors = ['#ff616f','#ffd166','#6fe7b8','#66a6ff','#c792ea'];
+  const count = 40 + Math.floor(Math.random()*60);
+  for(let i=0;i<count;i++){
+    const angle = Math.random()*Math.PI*2;
+    const speed = 1 + Math.random()*3;
+    const vel = {x: Math.cos(angle)*speed, y: Math.sin(angle)*speed};
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    particles.push(new Particle(x, y, color, vel, 1.6 + Math.random()*1.4, 1.6 + Math.random()*1.4));
+  }
+}
+
+/* trigger fireworks periodically (but not too often) */
+function triggerFireworksOnce(){
+  spawnFireworkAt(W*0.3, H*0.25);
+  spawnFireworkAt(W*0.7, H*0.2);
+  // optional: later periodic
+  setTimeout(()=>spawnFireworkAt(W*0.5, H*0.18), 1200);
+}
+
+/* animate canvas */
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.06, (now - last)/1000); last = now;
+  ctx.clearRect(0,0,W,H);
+  // update particles
+  for(let i = particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.update(dt);
+    if(p.life <= 0 || p.alpha <= 0.02){ particles.splice(i,1); continue; }
+    p.draw(ctx);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* Click on stage to spawn little fireworks */
+stage.addEventListener('click',(e)=>{
+  const rect = stage.getBoundingClientRect();
+  spawnFireworkAt(e.clientX - rect.left, e.clientY - rect.top);
+});
+
+/* ========== Sharing tips (no code) ========== */
+/* We will show a quick share hint overlay if the user tries to long-press... (not implemented) */
+/* But we provide instructions below in text (after the HTML). */
+
+</script>
+</body>
+</html>

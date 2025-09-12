@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarjeta de Cumpleaños</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(to right, #ff9a9e, #fad0c4);
+  }
+
+  .card {
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    padding: 30px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    animation: popin 1s ease;
+  }
+
+  @keyframes popin {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  h1 {
+    color: #ff4081;
+  }
+
+  p {
+    font-size: 1.2em;
+  }
+
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #ff4081;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background-color: #e91e63;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>¡Feliz Cumpleaños Abuelita Lidia</h1>
+  <p>Que todos tus deseos se hagan realidad, que Dios y la Virgen siempre te cuiden, te protegan.🥳🎉🥳</p>
+  <button id="playButton">🎵 Reproducir Música</button>
+</div>
+
+<audio id="birthdayAudio" loop>
+  <source src="felizcumple.mp3" type="audio/mpeg">
+  Tu navegador no soporta audio.
+</audio>
+
+<script>
+  const playButton = document.getElementById('playButton');
+  const audio = document.getElementById('birthdayAudio');
+
+  playButton.addEventListener('click', () => {
+    audio.play()
+      .then(() => {
+        playButton.style.display = 'none'; // Oculta botón después de reproducir
+      })
+      .catch(err => {
+        alert('No se pudo reproducir la música. Toca nuevamente para intentar.');
+      });
+  });
+</script>
+
+</body>
+</html>
